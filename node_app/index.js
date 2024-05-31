@@ -5,8 +5,13 @@
 // Dependencies
 
 const http = require("node:http");
+const https = require('node:https')
 const url = require("node:url");
 const { StringDecoder } = require("node:string_decoder");
+const config = require('./config');
+const fs = require('fs');
+const path = require("node:path");
+
 
 const handler = {};
 
@@ -24,8 +29,33 @@ const routers = {
   user: handler.user,
 };
 
-// server should respond to all request with a string
-const server = http.createServer((req, res) => {
+// server should respond to all HTTP request
+const httpServer = http.createServer((req, res) => {
+  unifiedServer(req, res)
+});
+
+httpServer.listen(config.httpPort, () => {
+  console.log(`Server is listening on port ${config.httpPort} in ${config.envName} mode`);
+});
+
+
+const httpsServerOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'https', 'key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'https', 'cert.pem'))
+}
+
+
+//server should response to all HTTPS request
+const httpsServer = https.createServer(httpsServerOptions, (req, res) => {
+  unifiedServer(req, res)
+})
+
+httpsServer.listen(config.httpsPort, () => {
+  console.log(`Server is listening on port ${config.httpsPort} in ${config.envName} mode`);
+});
+
+
+function unifiedServer(req, res){
   console.log({ url: req.url });
   // Get the URL and parse it. the true param tells node to parse the query string
   const parsedUrl = url.parse(req.url, true);
@@ -72,11 +102,4 @@ const server = http.createServer((req, res) => {
         .end(JSON.stringify(payload));
     });
   });
-});
-
-// Start the server and listen to port 8000
-const PORT = 8000;
-
-server.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
+}
