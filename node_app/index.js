@@ -11,6 +11,15 @@ const { StringDecoder } = require("node:string_decoder");
 const config = require('./config');
 const fs = require('fs');
 const path = require("node:path");
+const _data = require('./lib/data');
+
+(async () => {
+  try {
+    await _data.create('test', 'newFile', {'foo': 'bar'})
+  } catch (error) {
+    console.log(error)
+  }
+})()
 
 
 const handler = {};
@@ -55,10 +64,10 @@ httpsServer.listen(config.httpsPort, () => {
 
 
 function unifiedServer(req, res){
-  console.log({ url: req.url });
+
   // Get the URL and parse it. the true param tells node to parse the query string
   const parsedUrl = url.parse(req.url, true);
-  console.log({ url: req.url, parsedUrl });
+  
   // Get the path
   const path = parsedUrl.pathname;
   const trimmedPath = path.replace(/^\/+|\/+$/g, "");

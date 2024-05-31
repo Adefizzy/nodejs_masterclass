@@ -1,10 +1,11 @@
 const http = require("node:http");
 const url = require("node:url");
+const config = require('./config');
 
 const handlers = {};
 
 handlers.hello = function (data, callback) {
-  callback(200, data);
+  callback(200, {message: 'Wellcome and thank you for reaching out.'});
 };
 
 handlers.notFound = function (data, callback) {
@@ -29,6 +30,7 @@ const server = http.createServer((req, res) => {
   let body = "";
 
   req.setEncoding("utf8");
+
   req.on("data", (chunk) => {
     body += chunk;
   });
@@ -46,15 +48,13 @@ const server = http.createServer((req, res) => {
       ? routes[endpoint]
       : handlers.notFound;
 
-    routeHandler(header, function (statusCode, payload = {}) {
-      console.log({ header });
+    routeHandler(header, function (statusCode, payload={}) {
       res.setHeader("content-type", "application/json");
-
       res.writeHead(statusCode).end(JSON.stringify(payload));
     });
   });
 });
 
-server.listen(6000, () => {
-  console.log(`Server now listening on port ${6000}`);
+server.listen(config.port, () => {
+  console.log(`Server now listening on port ${config.port}`);
 });
