@@ -4,21 +4,101 @@
 
 // Dependencies
 
-const http = require("http");
-const url = require("url");
+const http = require("node:http");
+const https = require('node:https')
+const url = require("node:url");
+const { StringDecoder } = require("node:string_decoder");
+const config = require('./config');
+const fs = require('fs');
+const path = require("node:path");
 
-// server should respond to all request with a string
 
-const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true)
-    const path = parsedUrl.pathname;
-    const trimmedPath = path.replace(/^\/+|\/+$/g, '')
-    console.log({trimmedPath})
-  res.end("Hello WOrld\n");
+const handler = {};
+
+handler.ping = function (data, callback) {
+  callback(200);
+};
+
+handler.notFound = function (data, callback) {
+  console.log({ data });
+  callback(404);
+};
+
+const routers = {
+  ping: handler.ping,
+};
+
+// server should respond to all HTTP request
+const httpServer = http.createServer((req, res) => {
+  unifiedServer(req, res)
 });
 
-// Start the server and listen to port 8000
-const PORT = 8000;
-server.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
+httpServer.listen(config.httpPort, () => {
+  console.log(`Server is listening on port ${config.httpPort} in ${config.envName} mode`);
 });
+
+
+const httpsServerOptions = {
+  key: fs.readFileSync(path.join(__dirname, 'https', 'key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'https', 'cert.pem'))
+}
+
+
+//server should response to all HTTPS request
+const httpsServer = https.createServer(httpsServerOptions, (req, res) => {
+  unifiedServer(req, res)
+})
+
+httpsServer.listen(config.httpsPort, () => {
+  console.log(`Server is listening on port ${config.httpsPort} in ${config.envName} mode`);
+});
+
+
+function unifiedServer(req, res){
+  console.log({ url: req.url });
+  // Get the URL and parse it. the true param tells node to parse the query string
+  const parsedUrl = url.parse(req.url, true);
+  console.log({ url: req.url, parsedUrl });
+  // Get the path
+  const path = parsedUrl.pathname;
+  const trimmedPath = path.replace(/^\/+|\/+$/g, "");
+
+  // Get the query string object
+  const queryStringObj = parsedUrl.query;
+
+  // Get the HTTP Method
+  const method = req.method.toUpperCase();
+
+  // Get the HTTP header
+  const headers = req.headers;
+
+  //const decoder = new StringDecoder('utf-8');
+  let buffer = "";
+  req.setEncoding("utf-8");
+  req.on("data", (chunk) => {
+    buffer += chunk; //decoder.write(chunk);
+  });
+
+  req.on("end", () => {
+    // buffer += decoder.end();
+    const body = JSON.parse(buffer);
+    console.log(`data was sent, the body is ${buffer}`);
+
+    const data = {
+      buffer,
+      headers,
+      method,
+      queryStringObj,
+      trimmedPath,
+    };
+
+    const routeHandler = routers[trimmedPath] ?? handler.notFound;
+
+    routeHandler(data, function (statusCode, payload = {}) {
+      res.setHeader("content-type", "application/json" )
+      res
+        .writeHead(statusCode)
+        .end(JSON.stringify(payload));
+    });
+  });
+}
