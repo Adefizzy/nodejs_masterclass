@@ -15,9 +15,8 @@ const path = require("node:path");
 
 const handler = {};
 
-handler.user = function (data, callback) {
-  console.log({ data });
-  callback(406, { name: "adefisayo" });
+handler.ping = function (data, callback) {
+  callback(200);
 };
 
 handler.notFound = function (data, callback) {
@@ -26,7 +25,7 @@ handler.notFound = function (data, callback) {
 };
 
 const routers = {
-  user: handler.user,
+  ping: handler.ping,
 };
 
 // server should respond to all HTTP request
