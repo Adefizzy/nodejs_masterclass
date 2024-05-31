@@ -7,19 +7,11 @@
 const http = require("node:http");
 const https = require('node:https')
 const url = require("node:url");
-const { StringDecoder } = require("node:string_decoder");
+//const { StringDecoder } = require("node:string_decoder");
 const config = require('./config');
 const fs = require('fs');
 const path = require("node:path");
-const _data = require('./lib/data');
 
-(async () => {
-  try {
-    await _data.create('test', 'newFile', {'foo': 'bar'})
-  } catch (error) {
-    console.log(error)
-  }
-})()
 
 
 const handler = {};
@@ -67,7 +59,7 @@ function unifiedServer(req, res){
 
   // Get the URL and parse it. the true param tells node to parse the query string
   const parsedUrl = url.parse(req.url, true);
-  
+
   // Get the path
   const path = parsedUrl.pathname;
   const trimmedPath = path.replace(/^\/+|\/+$/g, "");
