@@ -1,7 +1,7 @@
 const environment = {};
 
 environment.staging = {
-  port: 4000,
+  port: 3000,
   envName: "staging",
 };
 
