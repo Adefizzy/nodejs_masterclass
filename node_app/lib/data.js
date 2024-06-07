@@ -18,13 +18,7 @@ lib.create = async function (dir, file, data) {
     );
 
     // write to file using file handle
-    await fileHandle.writeFile(JSON.stringify(data), "utf-8");
-  } catch (error) {
-   if(error.code === 'EEXIST'){
-    console.log('File already exist')
-   }else{
-    console.log(error.code)
-   }
+   return await fileHandle.writeFile(JSON.stringify(data), "utf-8");
   } finally {
     // close file after writting.
     if (fileHandle) {
@@ -35,8 +29,10 @@ lib.create = async function (dir, file, data) {
 
 lib.read = async function(dir, file){
     try {
-        return await fs.readFile(path.join(this.baseDir, dir, `${file}.json`), 'utf-8');
+        const data = await fs.readFile(path.join(this.baseDir, dir, `${file}.json`), 'utf-8');
+        return JSON.parse(data);
     } catch (error) {
+        if(error.code === 'ENOENT') return null
         console.log('Error occurred while reading file')
     }
 }

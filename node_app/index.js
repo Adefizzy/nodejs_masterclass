@@ -11,22 +11,13 @@ const url = require("node:url");
 const config = require('./config');
 const fs = require('fs');
 const path = require("node:path");
+const handler = require('./lib/handlers');
 
 
 
-const handler = {};
-
-handler.ping = function (data, callback) {
-  callback(200);
-};
-
-handler.notFound = function (data, callback) {
-  console.log({ data });
-  callback(404);
-};
 
 const routers = {
-  ping: handler.ping,
+  users: handler.users,
 };
 
 // server should respond to all HTTP request
@@ -38,12 +29,10 @@ httpServer.listen(config.httpPort, () => {
   console.log(`Server is listening on port ${config.httpPort} in ${config.envName} mode`);
 });
 
-
 const httpsServerOptions = {
   key: fs.readFileSync(path.join(__dirname, 'https', 'key.pem')),
   cert: fs.readFileSync(path.join(__dirname, 'https', 'cert.pem'))
 }
-
 
 //server should response to all HTTPS request
 const httpsServer = https.createServer(httpsServerOptions, (req, res) => {
@@ -68,7 +57,7 @@ function unifiedServer(req, res){
   const queryStringObj = parsedUrl.query;
 
   // Get the HTTP Method
-  const method = req.method.toUpperCase();
+  const method = req.method.toLowerCase();
 
   // Get the HTTP header
   const headers = req.headers;
@@ -86,7 +75,7 @@ function unifiedServer(req, res){
     console.log(`data was sent, the body is ${buffer}`);
 
     const data = {
-      buffer,
+      body,
       headers,
       method,
       queryStringObj,
